@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizator Widma</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+		background-color: #1e1e1e;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: gray;
+        }
+        #audioInput {
+            margin-top: 20px;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+			background-color: lime;
+        }
+		text{
+		background-color: lime;
+		}
+    </style>
+</head>
+<body>
+
+<h1 style="color: lime;">Analizator Widma</h1>
+<a href="/.." style="position: absolute; top: 10px; left: 10px; color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+<canvas id="spectrumCanvas" width="600" height="300"></canvas>
+<input type="file" id="audioInput" accept="audio/*" />
+
+<div id="controls">
+    <button id="playButton">Play</button>
+    <button id="pauseButton">Pause</button>
+</div>
+
+<script>
+    // Ustawienia dla analizatora widma
+    const canvas = document.getElementById("spectrumCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Ustawienia dla Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;  // Rozdzielczość analizy
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    let audioElement = null;
+    let audioSource = null;
+
+    // Funkcja rysująca widmo na canvasie
+    function drawSpectrum() {
+        analyser.getByteFrequencyData(dataArray);
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = canvas.width / bufferLength;
+        let barHeight;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            barHeight = dataArray[i];
+
+            ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+            ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+
+            x += barWidth;
+        }
+
+        requestAnimationFrame(drawSpectrum);  // Kontynuuj rysowanie w pętli
+    }
+
+    // Funkcja obsługująca plik audio
+    function loadAudio(file) {
+        if (audioElement) {
+            audioElement.pause();
+            audioElement = null;
+        }
+
+        audioElement = new Audio(URL.createObjectURL(file));
+        audioElement.addEventListener("canplay", function() {
+            audioSource = audioContext.createMediaElementSource(audioElement);
+            audioSource.connect(analyser);
+            analyser.connect(audioContext.destination);
+            drawSpectrum();
+        });
+    }
+
+    // Funkcja Play - rozpoczęcie odtwarzania
+    function playAudio() {
+        // Upewnij się, że AudioContext jest aktywowane
+        audioContext.resume().then(() => {
+            if (audioElement) {
+                audioElement.play();
+            }
+        });
+    }
+
+    // Funkcja Pause - zatrzymanie odtwarzania
+    function pauseAudio() {
+        if (audioElement) {
+            audioElement.pause();
+        }
+    }
+
+    // Nasłuchiwanie na zmianę pliku audio
+    document.getElementById("audioInput").addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            loadAudio(file);
+        }
+    });
+
+    // Nasłuchiwanie przycisku Play
+    document.getElementById("playButton").addEventListener("click", function() {
+        playAudio();
+    });
+
+    // Nasłuchiwanie przycisku Pause
+    document.getElementById("pauseButton").addEventListener("click", function() {
+        pauseAudio();
+    });
+</script>
+
+</body>
+</html>

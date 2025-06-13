@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyświetlanie kodów ANSI</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        pre {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wyświetlanie pliku z kodami ANSI</h1>
+	<a href="/.." style="position: absolute; top: 10px; left: 10px; color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+    <input type="file" id="fileInput" accept=".txt">
+    <pre id="fileContent">Wybierz plik TXT, aby go wyświetlić...</pre>
+
+    <!-- Ładowanie lokalnego pliku JS -->
+    <script src="ansi_up.min.js"></script>
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const rawText = e.target.result;
+                    console.log("Raw Text (surowy tekst pliku):", rawText);  // Debugowanie
+                    const ansi_up = new AnsiUp();
+                    const htmlText = ansi_up.ansi_to_html(rawText);
+                    console.log("HTML po konwersji:", htmlText);  // Debugowanie
+                    document.getElementById('fileContent').innerHTML = htmlText;
+                };
+                reader.onerror = function() {
+                    alert("Wystąpił błąd przy odczycie pliku.");
+                    console.error("Błąd odczytu pliku.");
+                };
+                reader.readAsText(file);
+            } else {
+                alert("Nie wybrano pliku.");
+            }
+        });
+    </script>
+</body>
+</html>

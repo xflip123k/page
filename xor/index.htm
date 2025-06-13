@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Szyfrowanie pliku XOR</title>
+  <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        pre {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+  <h1>Szyfrowanie pliku przy użyciu algorytmu XOR</h1>
+  <a href="/.." style="position: absolute; top: 10px; left: 10px; color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+  
+  <input type="file" id="fileInput" accept=".txt" />
+  <button id="encryptButton">Szyfruj</button>
+  <button id="decryptButton">Deszyfruj</button>
+  <button id="downloadButton" style="display:none;">Pobierz zaszyfrowany plik</button>
+  <textarea id="output" style="width: 100%; height: 300px;background-color: gray;" placeholder="Tutaj pojawią się dane..."></textarea>
+
+  <script>
+    // Funkcja XOR - szyfrowanie i deszyfrowanie
+    function xorEncryptDecrypt(data, key) {
+      const result = [];
+      for (let i = 0; i < data.length; i++) {
+        result.push(data.charCodeAt(i) ^ key); // XOR między bajtem a kluczem
+      }
+      return String.fromCharCode.apply(null, result);
+    }
+
+    const fileInput = document.getElementById('fileInput');
+    const encryptButton = document.getElementById('encryptButton');
+    const decryptButton = document.getElementById('decryptButton');
+    const downloadButton = document.getElementById('downloadButton');
+    const output = document.getElementById('output');
+    
+    let fileContent = '';
+    let encryptedContent = '';
+    let originalFileName = '';
+
+    // Załadowanie pliku do pamięci
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        originalFileName = file.name; // Zapisz nazwę oryginalnego pliku
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          fileContent = e.target.result;
+          output.value = fileContent; // Pokaż zawartość pliku w textarea
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Szyfrowanie
+    encryptButton.addEventListener('click', () => {
+      const key = 123; // Przykładowy klucz XOR (możesz wybrać dowolny numer)
+      encryptedContent = xorEncryptDecrypt(fileContent, key);
+      output.value = encryptedContent; // Pokaż zaszyfrowany tekst
+      downloadButton.style.display = 'inline'; // Pokaż przycisk pobierania
+    });
+
+    // Deszyfrowanie
+    decryptButton.addEventListener('click', () => {
+      const key = 123; // Ten sam klucz, co przy szyfrowaniu
+      const decrypted = xorEncryptDecrypt(fileContent, key);
+      output.value = decrypted; // Pokaż odszyfrowany tekst
+    });
+
+    // Pobieranie zaszyfrowanego pliku
+    downloadButton.addEventListener('click', () => {
+      // Utwórz Blob z zaszyfrowanymi danymi
+      const blob = new Blob([encryptedContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      // Utwórz link do pobrania z oryginalną nazwą pliku
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = originalFileName; // Nazwa pobieranego pliku = nazwa oryginalnego pliku
+      link.click();
+      
+      // Zwolnij URL po pobraniu
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Konwerter formatów znaków</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    textarea, select, button { width: 100%; margin-top: 10px; padding: 10px; font-size: 1rem; }
+    label { display: block; margin-top: 20px; font-weight: bold; }
+    pre { background: #f0f0f0; padding: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+  <h2>Konwerter ASCII / BIN / OCT / DEC / HEX</h2>
+<a href="/.." style="color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+<a href="/dec/display.html" style="color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Displayer</a>
+
+  <label>Format wejściowy:</label>
+  <select id="inputFormat">
+    <option value="ascii">ASCII</option>
+    <option value="bin">BIN</option>
+    <option value="oct">OCT</option>
+    <option value="dec">DEC</option>
+    <option value="hex">HEX</option>
+  </select>
+
+  <label>Dane wejściowe:</label>
+  <textarea id="inputData" rows="3" placeholder="Np. Hello lub 48 65 6C 6C 6F"></textarea>
+
+  <label>Format wyjściowy:</label>
+  <select id="outputFormat">
+    <option value="ascii">ASCII</option>
+    <option value="bin">BIN</option>
+    <option value="oct">OCT</option>
+    <option value="dec">DEC</option>
+    <option value="hex">HEX</option>
+  </select>
+
+  <button onclick="convert()">Konwertuj</button>
+
+  <label>Wynik:</label>
+  <pre id="outputData"></pre>
+
+  <script>
+    function convert() {
+      const inputFormat = document.getElementById("inputFormat").value;
+      const outputFormat = document.getElementById("outputFormat").value;
+      const input = document.getElementById("inputData").value.trim();
+      const output = document.getElementById("outputData");
+
+      try {
+        let codes = [];
+
+        if (inputFormat === "ascii") {
+          for (let char of input) {
+            codes.push(char.charCodeAt(0));
+          }
+        } else {
+          const base = { bin: 2, oct: 8, dec: 10, hex: 16 }[inputFormat];
+          const parts = input.split(/\s+/);
+          codes = parts.map(p => parseInt(p, base));
+        }
+
+        let result = [];
+
+        if (outputFormat === "ascii") {
+          result = codes.map(code => String.fromCharCode(code));
+        } else {
+          const base = { bin: 2, oct: 8, dec: 10, hex: 16 }[outputFormat];
+          const pad = { bin: 8, oct: 3, hex: 2 }[outputFormat] || 0;
+          result = codes.map(code => {
+            let str = code.toString(base).toUpperCase();
+            return pad ? str.padStart(pad, '0') : str;
+          });
+        }
+
+        output.textContent = result.join(outputFormat === "ascii" ? '' : ' ');
+      } catch (e) {
+        output.textContent = "Błąd konwersji: sprawdź dane wejściowe.";
+      }
+    }
+  </script>
+</body>
+</html>

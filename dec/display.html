@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Konwerter BIN</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f2f2f2;
+      font-size: 14px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    /* Kontener dla grupy label + kontrolka */
+    .control-group {
+      margin-bottom: 12px;
+    }
+
+    label.control-label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Flex dla inputów, selectów itd. */
+    .controls-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    select,
+    input[type="file"],
+    input[type="number"] {
+      /* ustalamy szerokość mniejszą, nie 100% */
+      width: 150px;
+      padding: 4px 6px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    input[type="checkbox"] {
+      /* lekko większy odstęp między checkboxem a etykietą */
+      margin-right: 6px;
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+
+    /* Etykieta checkbox inline */
+    label.checkbox-label {
+      font-weight: normal;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    button {
+      font-size: 13px;
+      padding: 6px 12px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 15px;
+      width: auto;
+      display: inline-block;
+      border-radius: 3px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .output {
+      background: #fff;
+      border: 1px solid #ccc;
+      min-height: 80px;
+      padding: 6px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Konwerter BIN/DEC/OCT/HEX + Endian + Offset</h1>
+<a href="/dec" style="color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+  <div class="control-group">
+    <label class="control-label" for="fileInput">Załaduj plik .bin</label>
+    <input type="file" style="width: 100%;" id="fileInput" accept=".bin" />
+  </div>
+
+  <div class="control-group">
+    <label class="control-label" for="baseSelect">Wybierz system docelowy:</label>
+    <div class="controls-inline">
+      <select id="baseSelect">
+        <option value="2">Binarny</option>
+        <option value="8">Ósemkowy</option>
+        <option value="10">Dziesiętny</option>
+        <option value="16">Szesnastkowy</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label class="control-label" for="groupSize">Bajty na grupę:</label>
+    <div class="controls-inline">
+      <select id="groupSize">
+        <option value="1">1 bajt (8-bit)</option>
+        <option value="2">2 bajty (16-bit)</option>
+        <option value="4">4 bajty (32-bit)</option>
+        <option value="8">8 bajtów (64-bit)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label class="control-label" for="endianSelect">Kolejność bajtów (Endian):</label>
+    <div class="controls-inline">
+      <select id="endianSelect">
+        <option value="LE">Little Endian</option>
+        <option value="BE">Big Endian</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="control-group" id="highlightContainer" class="hidden">
+    <label class="checkbox-label" for="highlightOnes">
+      <input type="checkbox" id="highlightOnes" />
+      Pokoloruj jedynki (tylko w systemie binarnym)
+    </label>
+  </div>
+
+  <div class="control-group">
+    <label class="checkbox-label" for="showOffset">
+      <input type="checkbox" id="showOffset" checked />
+      Pokaż offset (adres bajtu)
+    </label>
+  </div>
+
+  <div class="control-group">
+    <label class="control-label" for="output">Wynik konwersji:</label>
+    <div id="output" class="output">Brak danych. Wczytaj plik .bin.</div>
+  </div>
+
+  <button id="exportBtn">Eksportuj wynik do pliku .txt</button>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const baseSelect = document.getElementById("baseSelect");
+    const groupSize = document.getElementById("groupSize");
+    const endianSelect = document.getElementById("endianSelect");
+    const highlightCheckbox = document.getElementById("highlightOnes");
+    const highlightContainer = document.getElementById("highlightContainer");
+    const showOffsetCheckbox = document.getElementById("showOffset");
+    const output = document.getElementById("output");
+
+    fileInput.addEventListener("change", handleFile);
+    baseSelect.addEventListener("change", () => {
+      toggleHighlightOption();
+      updateOutput();
+    });
+    groupSize.addEventListener("change", updateOutput);
+    endianSelect.addEventListener("change", updateOutput);
+    highlightCheckbox.addEventListener("change", updateOutput);
+    showOffsetCheckbox.addEventListener("change", updateOutput);
+
+    let fileData = null;
+
+    function handleFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        fileData = new Uint8Array(reader.result);
+        updateOutput();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function toggleHighlightOption() {
+      const base = parseInt(baseSelect.value);
+      if (base === 2) {
+        highlightContainer.classList.remove("hidden");
+      } else {
+        highlightContainer.classList.add("hidden");
+      }
+    }
+
+    function updateOutput() {
+      if (!fileData) {
+        output.textContent = "Brak danych. Wczytaj plik .bin.";
+        return;
+      }
+
+      const base = parseInt(baseSelect.value);
+      const size = parseInt(groupSize.value);
+      const endian = endianSelect.value;
+      const highlight = highlightCheckbox.checked;
+      const showOffset = showOffsetCheckbox.checked;
+
+      let result = "";
+
+      for (let i = 0; i < fileData.length; i += size) {
+        let value = BigInt(0);
+        for (let j = 0; j < size; j++) {
+          const index = endian === "LE" ? j : size - 1 - j;
+          const byte = fileData[i + index] ?? 0;
+          value |= BigInt(byte) << BigInt(8 * (size - 1 - j));
+        }
+
+        let formatted;
+        switch (base) {
+          case 2:
+            let binStr = value.toString(2).padStart(size * 8, "0");
+            if (highlight) {
+              binStr = binStr.replace(/1/g, '<span style="color:red;">1</span>');
+            }
+            formatted = "0b" + binStr;
+            break;
+          case 8:
+            formatted = "0o" + value.toString(8);
+            break;
+          case 10:
+            formatted = value.toString(10);
+            break;
+          case 16:
+            formatted = "0x" + value.toString(16).toUpperCase().padStart(size * 2, "0");
+            break;
+        }
+
+        const offset = i.toString(16).padStart(8, "0");
+        result += (showOffset ? `${offset}: ` : "") + `${formatted}<br>`;
+      }
+
+      output.innerHTML = result.trim();
+    }
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      let text = output.innerHTML
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<span[^>]*>|<\/span>/gi, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "wynik_konwersji.txt";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+
+    toggleHighlightOption();
+  </script>
+
+</body>
+</html>

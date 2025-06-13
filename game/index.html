@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Game</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+
+			  background-color: #2e2e2e;
+        }
+        #gameCanvas {
+            border: 2px solid black;
+            background-color: lightblue;
+        }
+    </style>
+</head>
+<body>
+    <h1 style= "color: lime;">To Jest Gra</h1>
+	<a href="/.." style="color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+	<span onclick="location.reload()"; style="color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">
+  Restart
+</span>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <p style= "color: lime;">Używaj strzałek do poruszania się</p>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        
+        let player = { x: 180, y: 350, width: 40, height: 40 };
+        let obstacle = { x: Math.random() * 360, y: 0, width: 40, height: 40 };
+        let gameOver = false;
+        let score = 0;
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "red";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            ctx.fillStyle = "black";
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Punkty: " + score, 10, 20);
+        }
+        
+        function update() {
+            if (gameOver) return;
+            
+            obstacle.y += 5;
+            if (obstacle.y > canvas.height) {
+                obstacle.y = 0;
+                obstacle.x = Math.random() * 360;
+                score++;
+            }
+            
+            if (
+                player.x < obstacle.x + obstacle.width &&
+                player.x + player.width > obstacle.x &&
+                player.y < obstacle.y + obstacle.height &&
+                player.y + player.height > obstacle.y
+            ) {
+                gameOver = true;
+                alert("Koniec gry! Twój wynik: " + score);
+            }
+        }
+        
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft" && player.x > 0) player.x -= 20;
+            if (event.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += 20;
+        });
+        
+        loop();
+    </script>
+</body>
+</html>

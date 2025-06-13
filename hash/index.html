@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashowarka</title>
+    <script src="sha1.min.js"></script>
+<style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            color: white;
+			  background-color: black;
+        }
+    </style>	
+</head>
+<body>
+    <h2>SHA-1</h2>
+    <input type="text" id="inputText" placeholder="Input:" oninput="calculateHash()">
+   <p><strong>Hash:</strong> <span id="hashOutput"></span></p>
+    <a href="/.." style="color: lime; text-decoration:  text-shadow: 0 0 20px lime; font-size: 2vw;">Powrót</a>
+
+    <script>
+        function calculateHash() {
+            const text = document.getElementById("inputText").value;
+            const hash = hex_sha1(text);  // Używamy hex_sha1 z biblioteki
+            document.getElementById("hashOutput").innerText = hash;
+        }
+    </script>
+</body>
+</html>
+
